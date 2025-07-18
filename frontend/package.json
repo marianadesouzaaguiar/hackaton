@@ -1,0 +1,37 @@
+{
+    "name": "plataforma-atividades-frontend",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Frontend da Plataforma de Atividades com IA",
+    "scripts": {
+        "start": "react-scripts start",
+        "build": "react-scripts build",
+        "test": "react-scripts test",
+        "eject": "react-scripts eject"
+    },
+    "dependencies": {
+        "axios": "^1.10.0",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "react-router-dom": "^7.7.0",
+        "react-scripts": "5.0.1"
+    },
+    "browserslist": {
+        "production": [
+            ">0.2%",
+            "not dead",
+            "not op_mini all"
+        ],
+        "development": [
+            "last 1 chrome version",
+            "last 1 firefox version",
+            "last 1 safari version"
+        ]
+    },
+    "devDependencies": {
+        "@tailwindcss/postcss": "^4.1.11",
+        "css-loader": "^7.1.2",
+        "postcss-loader": "^8.1.1",
+        "style-loader": "^4.0.0"
+    }
+}
