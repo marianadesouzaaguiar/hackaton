@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { generateTextWithOpenRouter } = require('../services/openrouterService');
+const { generateTextWithOpenRouter } = require('../services/openRouterService');
 
 const generateActivity = async (req, res) => {
   try {

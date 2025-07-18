@@ -13,6 +13,9 @@ exports.register = async (req, res) => {
     const token = jwt.sign({ userId: novoUsuario._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
     res.status(201).json({ token, usuario: novoUsuario });
   } catch (err) {
+    if (err.code === 11000 && err.keyValue?.email) {
+      return res.status(400).json({ mensagem: 'Este e-mail já está em uso.' });
+    }
     res.status(500).json({ mensagem: 'Erro ao registrar usuário', erro: err.message });
   }
 };
