@@ -4,22 +4,17 @@ import { useNavigate } from "react-router-dom";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState(""); // corrigido
+  const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
   const login = async () => {
     try {
       const response = await axios.post("http://localhost:5000/auth/login", {
         email,
-        password, // corrigido
+        password,
       });
 
-      localStorage.setItem("token", response.data.token);
-      if (response.data.user) {
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-      }
-
-      alert("Login realizado com sucesso!");
+      alert(response.data.mensagem); // <-- backend envia "mensagem"
       navigate("/dashboard");
     } catch (err) {
       console.error(err.response?.data || err.message);
@@ -40,7 +35,7 @@ export default function LoginPage() {
         placeholder="Senha"
         type="password"
         value={password}
-        onChange={(e) => setPassword(e.target.value)} // corrigido
+        onChange={(e) => setPassword(e.target.value)}
         style={styles.input}
       />
       <button onClick={login} style={styles.button}>Entrar</button>

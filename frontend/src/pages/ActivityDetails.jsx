@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 export default function ActivityDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [atividade, setAtividade] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -11,12 +12,12 @@ export default function ActivityDetails() {
     const fetchAtividade = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get(`/api/atividades/${id}`, {
+        const response = await axios.get(`http://localhost:5000/atividades/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setAtividade(response.data);
       } catch (err) {
-        alert("Erro ao carregar os detalhes da atividade.");
+        console.error("Erro ao carregar detalhes:", err.message);
       } finally {
         setLoading(false);
       }
@@ -29,16 +30,24 @@ export default function ActivityDetails() {
     <div style={styles.wrapper}>
       <div style={styles.card}>
         <h2 style={styles.title}>Detalhes da Atividade</h2>
+
         {loading ? (
           <p>Carregando...</p>
         ) : atividade ? (
           <>
             <h3 style={styles.subtitle}>{atividade.titulo}</h3>
             <p style={styles.description}>{atividade.descricao}</p>
+            <p><strong>Nível escolar:</strong> {atividade.nivelEscolar}</p>
+            <p><strong>Matéria:</strong> {atividade.materia}</p>
+            <p><strong>Objetivo:</strong> {atividade.objetivo}</p>
           </>
         ) : (
           <p>Atividade não encontrada.</p>
         )}
+
+        <button style={styles.button} onClick={() => navigate("/dashboard")}>
+          Voltar
+        </button>
       </div>
     </div>
   );
@@ -75,5 +84,16 @@ const styles = {
   description: {
     fontSize: "16px",
     color: "#555",
+    marginBottom: "10px",
+  },
+  button: {
+    marginTop: "20px",
+    padding: "10px 20px",
+    backgroundColor: "#007bff",
+    color: "#fff",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontSize: "16px",
   },
 };
