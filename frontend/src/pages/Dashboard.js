@@ -19,8 +19,13 @@ export default function AtividadeLista() {
     setCarregando(true);
     setErro(null);
     try {
-      const res = await axios.get("http://localhost:5000/atividades");
-      setAtividades(res.data);
+      const token = localStorage.getItem("token");
+      const res = await axios.get("http://localhost:5000/atividades", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+            setAtividades(res.data);
     } catch (err) {
       setErro("Erro ao buscar atividades.");
       console.error(err);
@@ -109,8 +114,13 @@ export default function AtividadeLista() {
   const excluirAtividade = async (id) => {
     if (!window.confirm("Tem certeza que deseja excluir esta atividade?")) return;
     try {
-      await axios.delete(`http://localhost:5000/atividades/${id}`);
-      alert("Atividade excluída com sucesso!");
+      const token = localStorage.getItem("token");
+      await axios.delete(`http://localhost:5000/atividades/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+            alert("Atividade excluída com sucesso!");
       buscarAtividades();
     } catch (err) {
       alert("Erro ao excluir atividade.");
