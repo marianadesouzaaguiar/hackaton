@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -7,6 +7,14 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
+  // Redireciona automaticamente se já estiver logado
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      navigate("/dashboard");
+    }
+  }, [navigate]);
+
   const login = async () => {
     try {
       const response = await axios.post("http://localhost:5000/auth/login", {
@@ -14,7 +22,8 @@ export default function LoginPage() {
         password,
       });
 
-      alert(response.data.mensagem); // <-- backend envia "mensagem"
+      localStorage.setItem("token", response.data.token); // salva o token JWT
+      alert(response.data.mensagem);
       navigate("/dashboard");
     } catch (err) {
       console.error(err.response?.data || err.message);

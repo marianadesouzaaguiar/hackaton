@@ -1,117 +1,273 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 export default function CreateActivity() {
-  const [titulo, setTitulo] = useState("");
-  const [descricao, setDescricao] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({
+    titulo: "",
+    descricao: "",
+    nivelEscolar: "",
+    materia: "",
+    objetivo: "",
+    perguntas: [
+      {
+        pergunta: "",
+        tipo: "aberta",
+        opcoes: [],
+        respostaCorreta: "",
+      },
+    ],
+  });
 
-  const handleCreate = async () => {
-    if (!titulo || !descricao) {
-      alert("Preencha todos os campos.");
-      return;
-    }
+  const [carregando, setCarregando] = useState(false);
+  const navigate = useNavigate();
 
-    setLoading(true);
+  const atualizarCampo = (campo, valor) => {
+    setForm({ ...form, [campo]: valor });
+  };
 
-    try {
-      const token = localStorage.getItem("token");
-      await axios.post(
-        "/api/atividades",
-        { titulo, descricao },
+  const atualizarPergunta = (index, campo, valor) => {
+    const novas = [...form.perguntas];
+    novas[index][campo] = valor;
+    setForm({ ...form, perguntas: novas });
+  };
+
+  const atualizarOpcao = (indexPergunta, indexOpcao, valor) => {
+    const novas = [...form.perguntas];
+    novas[indexPergunta].opcoes[indexOpcao] = valor;
+    setForm({ ...form, perguntas: novas });
+  };
+
+  const adicionarOpcao = (indexPergunta) => {
+    const novas = [...form.perguntas];
+    novas[indexPergunta].opcoes.push("");
+    setForm({ ...form, perguntas: novas });
+  };
+
+  const adicionarPergunta = () => {
+    setForm({
+      ...form,
+      perguntas: [
+        ...form.perguntas,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+          pergunta: "",
+          tipo: "aberta",
+          opcoes: [],
+          respostaCorreta: "",
+        },
+      ],
+    });
+  };
+
+  const removerPergunta = (index) => {
+    const novas = form.perguntas.filter((_, i) => i !== index);
+    setForm({ ...form, perguntas: novas });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setCarregando(true);
+    try {
+      console.log("Enviando atividade:", form); // VERIFICAÇÃO
+      const token = localStorage.getItem("token");
+      await axios.post("http://localhost:5000/atividades", form, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       alert("Atividade criada com sucesso!");
-      setTitulo("");
-      setDescricao("");
+      navigate("/dashboard");
     } catch (err) {
+      console.error("Erro ao criar atividade:", err.response?.data || err.message);
       alert("Erro ao criar atividade.");
     } finally {
-      setLoading(false);
+      setCarregando(false);
     }
   };
 
   return (
-    <div style={styles.wrapper}>
-      <div style={styles.card}>
-        <h2 style={styles.title}>Nova Atividade</h2>
+    <div style={styles.container}>
+      <h2>➕ Criar Nova Atividade</h2>
+      <form onSubmit={handleSubmit} style={styles.form}>
         <input
           type="text"
-          placeholder="Título da atividade"
-          value={titulo}
-          onChange={(e) => setTitulo(e.target.value)}
+          placeholder="Título"
+          value={form.titulo}
+          onChange={(e) => atualizarCampo("titulo", e.target.value)}
+          required
+          style={styles.input}
+        />
+        <input
+          type="text"
+          placeholder="Matéria"
+          value={form.materia}
+          onChange={(e) => atualizarCampo("materia", e.target.value)}
+          required
+          style={styles.input}
+        />
+        <input
+          type="text"
+          placeholder="Nível Escolar"
+          value={form.nivelEscolar}
+          onChange={(e) => atualizarCampo("nivelEscolar", e.target.value)}
+          required
+          style={styles.input}
+        />
+        <input
+          type="text"
+          placeholder="Objetivo"
+          value={form.objetivo}
+          onChange={(e) => atualizarCampo("objetivo", e.target.value)}
+          required
           style={styles.input}
         />
         <textarea
-          placeholder="Descrição detalhada"
-          value={descricao}
-          onChange={(e) => setDescricao(e.target.value)}
+          placeholder="Descrição"
+          value={form.descricao}
+          onChange={(e) => atualizarCampo("descricao", e.target.value)}
+          required
           style={styles.textarea}
         />
-        <button onClick={handleCreate} style={styles.button} disabled={loading}>
-          {loading ? "Salvando..." : "Criar"}
+
+        <h4>Perguntas:</h4>
+        {form.perguntas.map((p, i) => (
+          <div key={i} style={styles.perguntaBox}>
+            <input
+              type="text"
+              placeholder={`Pergunta ${i + 1}`}
+              value={p.pergunta}
+              onChange={(e) => atualizarPergunta(i, "pergunta", e.target.value)}
+              required
+              style={styles.input}
+            />
+            <select
+              value={p.tipo}
+              onChange={(e) => atualizarPergunta(i, "tipo", e.target.value)}
+              style={styles.select}
+            >
+              <option value="aberta">Aberta</option>
+              <option value="multipla_escolha">Múltipla Escolha</option>
+            </select>
+
+            {p.tipo === "multipla_escolha" && (
+              <>
+                <p>Opções:</p>
+                {p.opcoes.map((op, idx) => (
+                  <input
+                    key={idx}
+                    type="text"
+                    value={op}
+                    onChange={(e) => atualizarOpcao(i, idx, e.target.value)}
+                    placeholder={`Opção ${idx + 1}`}
+                    style={styles.input}
+                  />
+                ))}
+                <button
+                  type="button"
+                  onClick={() => adicionarOpcao(i)}
+                  style={styles.miniBotao}
+                >
+                  ➕ Adicionar Opção
+                </button>
+                <input
+                  type="text"
+                  placeholder="Resposta Correta"
+                  value={p.respostaCorreta}
+                  onChange={(e) =>
+                    atualizarPergunta(i, "respostaCorreta", e.target.value)
+                  }
+                  style={styles.input}
+                />
+              </>
+            )}
+            <button
+              type="button"
+              onClick={() => removerPergunta(i)}
+              style={styles.removerBotao}
+            >
+              Remover Pergunta
+            </button>
+          </div>
+        ))}
+
+        <button type="button" onClick={adicionarPergunta} style={styles.miniBotao}>
+          ➕ Nova Pergunta
         </button>
-      </div>
+
+        <button type="submit" disabled={carregando} style={styles.botao}>
+          {carregando ? "Salvando..." : "Salvar Atividade"}
+        </button>
+      </form>
     </div>
   );
 }
 
 const styles = {
-  wrapper: {
-    minHeight: "100vh",
-    backgroundColor: "#f4f6f8",
+  container: {
+    padding: "2rem",
+    fontFamily: "Arial, sans-serif",
+    maxWidth: "700px",
+    margin: "0 auto",
+  },
+  form: {
     display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "40px 20px",
-  },
-  card: {
-    backgroundColor: "#fff",
-    padding: "30px",
-    borderRadius: "12px",
-    boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
-    width: "100%",
-    maxWidth: "500px",
-  },
-  title: {
-    marginBottom: "20px",
-    fontSize: "24px",
-    textAlign: "center",
-    color: "#333",
+    flexDirection: "column",
+    gap: "1rem",
   },
   input: {
-    width: "100%",
-    padding: "12px",
-    fontSize: "16px",
-    borderRadius: "8px",
+    padding: "0.5rem",
+    borderRadius: "4px",
     border: "1px solid #ccc",
-    marginBottom: "15px",
-    outline: "none",
+    fontSize: "1rem",
   },
   textarea: {
-    width: "100%",
-    height: "120px",
-    padding: "12px",
-    fontSize: "16px",
-    borderRadius: "8px",
+    padding: "0.5rem",
+    borderRadius: "4px",
     border: "1px solid #ccc",
-    marginBottom: "20px",
-    resize: "vertical",
-    outline: "none",
+    minHeight: "100px",
+    fontSize: "1rem",
   },
-  button: {
-    width: "100%",
-    padding: "12px",
-    backgroundColor: "#0077cc",
+  select: {
+    padding: "0.5rem",
+    borderRadius: "4px",
+    border: "1px solid #ccc",
+    fontSize: "1rem",
+  },
+  perguntaBox: {
+    border: "1px solid #ddd",
+    padding: "1rem",
+    borderRadius: "6px",
+    marginBottom: "1rem",
+    backgroundColor: "#f9f9f9",
+  },
+  botao: {
+    padding: "0.7rem",
+    backgroundColor: "#2ecc71",
     color: "#fff",
     border: "none",
-    borderRadius: "8px",
-    fontSize: "16px",
+    borderRadius: "6px",
     cursor: "pointer",
-    transition: "background 0.3s ease",
+    fontWeight: "bold",
+    fontSize: "1rem",
+  },
+  miniBotao: {
+    padding: "0.4rem 0.7rem",
+    backgroundColor: "#3498db",
+    color: "#fff",
+    border: "none",
+    borderRadius: "4px",
+    cursor: "pointer",
+    fontSize: "0.9rem",
+    marginTop: "0.5rem",
+  },
+  removerBotao: {
+    padding: "0.4rem 0.7rem",
+    backgroundColor: "#e74c3c",
+    color: "#fff",
+    border: "none",
+    borderRadius: "4px",
+    cursor: "pointer",
+    fontSize: "0.9rem",
+    marginTop: "0.5rem",
   },
 };

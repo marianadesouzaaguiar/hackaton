@@ -28,20 +28,50 @@ export default function EditarAtividade() {
     fetchAtividade();
   }, [id]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setAtividade((prev) => ({ ...prev, [name]: value }));
+  const atualizarCampo = (campo, valor) => {
+    setAtividade({ ...atividade, [campo]: valor });
   };
 
-  const atualizarPergunta = (index, valor) => {
+  const atualizarPergunta = (index, campo, valor) => {
     const novas = [...atividade.perguntas];
-    novas[index].pergunta = valor;
-    setAtividade((prev) => ({ ...prev, perguntas: novas }));
+    novas[index][campo] = valor;
+    setAtividade({ ...atividade, perguntas: novas });
+  };
+
+  const atualizarOpcao = (indexPergunta, indexOpcao, valor) => {
+    const novas = [...atividade.perguntas];
+    novas[indexPergunta].opcoes[indexOpcao] = valor;
+    setAtividade({ ...atividade, perguntas: novas });
+  };
+
+  const adicionarOpcao = (indexPergunta) => {
+    const novas = [...atividade.perguntas];
+    novas[indexPergunta].opcoes.push("");
+    setAtividade({ ...atividade, perguntas: novas });
+  };
+
+  const removerPergunta = (index) => {
+    const novas = atividade.perguntas.filter((_, i) => i !== index);
+    setAtividade({ ...atividade, perguntas: novas });
+  };
+
+  const adicionarPergunta = () => {
+    const novas = [
+      ...atividade.perguntas,
+      {
+        pergunta: "",
+        tipo: "aberta",
+        opcoes: [],
+        respostaCorreta: "",
+      },
+    ];
+    setAtividade({ ...atividade, perguntas: novas });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      console.log("🛠 Enviando:", atividade);
       const token = localStorage.getItem("token");
       await axios.put(`http://localhost:5000/atividades/${id}`, atividade, {
         headers: { Authorization: `Bearer ${token}` },
@@ -49,7 +79,7 @@ export default function EditarAtividade() {
       alert("Atividade atualizada com sucesso!");
       navigate("/dashboard");
     } catch (err) {
-      console.error(err);
+      console.error("Erro ao atualizar atividade:", err.response?.data || err.message);
       alert("Erro ao atualizar atividade.");
     }
   };
@@ -65,7 +95,7 @@ export default function EditarAtividade() {
           type="text"
           name="titulo"
           value={atividade.titulo}
-          onChange={handleChange}
+          onChange={(e) => atualizarCampo("titulo", e.target.value)}
           placeholder="Título"
           required
           style={styles.input}
@@ -74,7 +104,7 @@ export default function EditarAtividade() {
           type="text"
           name="materia"
           value={atividade.materia}
-          onChange={handleChange}
+          onChange={(e) => atualizarCampo("materia", e.target.value)}
           placeholder="Matéria"
           required
           style={styles.input}
@@ -83,7 +113,7 @@ export default function EditarAtividade() {
           type="text"
           name="nivelEscolar"
           value={atividade.nivelEscolar}
-          onChange={handleChange}
+          onChange={(e) => atualizarCampo("nivelEscolar", e.target.value)}
           placeholder="Nível Escolar"
           required
           style={styles.input}
@@ -92,7 +122,7 @@ export default function EditarAtividade() {
           type="text"
           name="objetivo"
           value={atividade.objetivo}
-          onChange={handleChange}
+          onChange={(e) => atualizarCampo("objetivo", e.target.value)}
           placeholder="Objetivo"
           required
           style={styles.input}
@@ -100,7 +130,7 @@ export default function EditarAtividade() {
         <textarea
           name="descricao"
           value={atividade.descricao}
-          onChange={handleChange}
+          onChange={(e) => atualizarCampo("descricao", e.target.value)}
           placeholder="Descrição"
           required
           style={styles.textarea}
@@ -108,16 +138,68 @@ export default function EditarAtividade() {
 
         <h4>Perguntas:</h4>
         {atividade.perguntas.map((p, i) => (
-          <input
-            key={i}
-            type="text"
-            value={p.pergunta}
-            onChange={(e) => atualizarPergunta(i, e.target.value)}
-            placeholder={`Pergunta ${i + 1}`}
-            style={styles.input}
-            required
-          />
+          <div key={i} style={styles.perguntaBox}>
+            <input
+              type="text"
+              value={p.pergunta}
+              onChange={(e) => atualizarPergunta(i, "pergunta", e.target.value)}
+              placeholder={`Pergunta ${i + 1}`}
+              required
+              style={styles.input}
+            />
+
+            <select
+              value={p.tipo}
+              onChange={(e) => atualizarPergunta(i, "tipo", e.target.value)}
+              style={styles.select}
+            >
+              <option value="aberta">Aberta</option>
+              <option value="multipla_escolha">Múltipla Escolha</option>
+            </select>
+
+            {p.tipo === "multipla_escolha" && (
+              <>
+                <p>Opções:</p>
+                {p.opcoes?.map((op, idx) => (
+                  <input
+                    key={idx}
+                    type="text"
+                    value={op}
+                    onChange={(e) => atualizarOpcao(i, idx, e.target.value)}
+                    placeholder={`Opção ${idx + 1}`}
+                    style={styles.input}
+                  />
+                ))}
+                <button
+                  type="button"
+                  onClick={() => adicionarOpcao(i)}
+                  style={styles.miniBotao}
+                >
+                  ➕ Adicionar Opção
+                </button>
+                <input
+                  type="text"
+                  placeholder="Resposta Correta"
+                  value={p.respostaCorreta}
+                  onChange={(e) => atualizarPergunta(i, "respostaCorreta", e.target.value)}
+                  style={styles.input}
+                />
+              </>
+            )}
+
+            <button
+              type="button"
+              onClick={() => removerPergunta(i)}
+              style={styles.removerBotao}
+            >
+              Remover Pergunta
+            </button>
+          </div>
         ))}
+
+        <button type="button" onClick={adicionarPergunta} style={styles.miniBotao}>
+          ➕ Nova Pergunta
+        </button>
 
         <button type="submit" style={styles.botao}>
           Salvar Alterações
@@ -131,7 +213,7 @@ const styles = {
   container: {
     padding: "2rem",
     fontFamily: "Arial, sans-serif",
-    maxWidth: "600px",
+    maxWidth: "700px",
     margin: "0 auto",
   },
   form: {
@@ -152,6 +234,19 @@ const styles = {
     minHeight: "100px",
     fontSize: "1rem",
   },
+  select: {
+    padding: "0.5rem",
+    borderRadius: "4px",
+    border: "1px solid #ccc",
+    fontSize: "1rem",
+  },
+  perguntaBox: {
+    border: "1px solid #ddd",
+    padding: "1rem",
+    borderRadius: "6px",
+    marginBottom: "1rem",
+    backgroundColor: "#f9f9f9",
+  },
   botao: {
     padding: "0.7rem",
     backgroundColor: "#2ecc71",
@@ -161,5 +256,25 @@ const styles = {
     cursor: "pointer",
     fontWeight: "bold",
     fontSize: "1rem",
+  },
+  miniBotao: {
+    padding: "0.4rem 0.7rem",
+    backgroundColor: "#3498db",
+    color: "#fff",
+    border: "none",
+    borderRadius: "4px",
+    cursor: "pointer",
+    fontSize: "0.9rem",
+    marginTop: "0.5rem",
+  },
+  removerBotao: {
+    padding: "0.4rem 0.7rem",
+    backgroundColor: "#e74c3c",
+    color: "#fff",
+    border: "none",
+    borderRadius: "4px",
+    cursor: "pointer",
+    fontSize: "0.9rem",
+    marginTop: "0.5rem",
   },
 };

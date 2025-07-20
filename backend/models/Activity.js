@@ -1,38 +1,59 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
+
+const perguntaSchema = new mongoose.Schema({
+  pergunta: {
+    type: String,
+    required: true,
+  },
+  tipo: {
+    type: String,
+    enum: ["aberta", "multipla_escolha"],
+    default: "aberta",
+  },
+  opcoes: {
+    type: [String],
+    default: [],
+  },
+  respostaCorreta: {
+    type: String,
+    default: "",
+  },
+});
 
 const activitySchema = new mongoose.Schema({
   titulo: {
     type: String,
-    required: [true, 'O campo "titulo" é obrigatório.']
+    required: true,
   },
   descricao: {
     type: String,
-    required: [true, 'O campo "descricao" é obrigatório.']
+    required: true,
   },
   nivelEscolar: {
     type: String,
-    required: [true, 'O campo "nivelEscolar" é obrigatório.']
+    required: true,
   },
   materia: {
     type: String,
-    required: [true, 'O campo "materia" é obrigatório.']
+    required: true,
   },
   objetivo: {
     type: String,
-    required: [true, 'O campo "objetivo" é obrigatório.']
+    required: true,
   },
   perguntas: {
-    type: [String],
-    required: [true, 'O campo "perguntas" é obrigatório.'],
+    type: [perguntaSchema],
+    required: true,
     validate: {
-      validator: (v) => Array.isArray(v) && v.length > 0,
-      message: 'Deve haver ao menos uma pergunta.'
-    }
+      validator: (arr) =>
+        Array.isArray(arr) && arr.every((p) => typeof p === "object" && p.pergunta),
+      message: "Cada pergunta deve ser um objeto válido com campo 'pergunta'.",
+    },
   },
   criadoEm: {
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
 });
 
-module.exports = mongoose.model('Activity', activitySchema);
+module.exports = mongoose.model("Activity", activitySchema);
