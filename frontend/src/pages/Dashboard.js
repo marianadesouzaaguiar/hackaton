@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import "jspdf-autotable"; // ✅ correto
 
 export default function AtividadeLista() {
   const [atividades, setAtividades] = useState([]);
@@ -76,35 +76,36 @@ export default function AtividadeLista() {
     document.body.removeChild(link);
   };
 
-  const exportarPDF = (atividadesParaExportar) => {
+  const exportarPDF = () => {
     const doc = new jsPDF();
-
-    atividadesParaExportar.forEach((atividade, index) => {
-      if (index !== 0) doc.addPage();
-
-      doc.setFontSize(16);
-      doc.text(atividade.titulo || "Atividade", 14, 20);
-
-      doc.setFontSize(12);
-      doc.text(`Descrição: ${atividade.descricao || ""}`, 14, 30);
-      doc.text(`Objetivo: ${atividade.objetivo || ""}`, 14, 40);
-      doc.text(`Matéria: ${atividade.materia || ""}`, 14, 50);
-      doc.text(`Nível Escolar: ${atividade.nivelEscolar || ""}`, 14, 60);
-
-      const perguntas = (atividade.perguntas || []).map((p, i) => [
-        `${i + 1}. ${typeof p === "string" ? p : p.pergunta || ""}`,
-      ]);
-
-      doc.autoTable({
-        startY: 70,
-        head: [["Perguntas"]],
-        body: perguntas,
-      });
+  
+    doc.text("Relatório de Atividades", 14, 10);
+  
+    doc.autoTable({
+      head: [["Título", "Matéria", "Descrição"]],
+      body: atividadesFiltradas.map((a) => [
+        a.titulo,
+        a.materia,
+        a.descricao.length > 80 ? a.descricao.slice(0, 77) + "..." : a.descricao,
+      ]),
+      startY: 20,
+      styles: {
+        fontSize: 10,
+        cellWidth: 'wrap',
+      },
+      headStyles: {
+        fillColor: [0, 119, 204], // azul para cabeçalho
+        textColor: 255,
+        halign: "center",
+      },
+      bodyStyles: {
+        valign: "top",
+      },
     });
-
+  
     doc.save("atividades.pdf");
   };
-
+  
   const excluirAtividade = async (id) => {
     if (!window.confirm("Tem certeza que deseja excluir esta atividade?")) return;
     try {
