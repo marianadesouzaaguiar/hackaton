@@ -43,8 +43,6 @@ Casos de Uso Reais:
 🔮 4. Próximos Passos (2 minutos)
 Melhorias Futuras:
 
-Implementar exportação em PDF para atividades criadas com IA.
-
 Criar funcionalidades para alunos responderem atividades online.
 
 Criar painel de desempenho do aluno.
