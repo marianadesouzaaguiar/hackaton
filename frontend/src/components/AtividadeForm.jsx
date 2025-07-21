@@ -19,6 +19,7 @@ export default function CreateActivity() {
     ],
   });
 
+  const [temaIA, setTemaIA] = useState("");
   const [carregando, setCarregando] = useState(false);
   const navigate = useNavigate();
 
@@ -68,7 +69,6 @@ export default function CreateActivity() {
     e.preventDefault();
     setCarregando(true);
     try {
-      console.log("Enviando atividade:", form); // VERIFICAÇÃO
       const token = localStorage.getItem("token");
       await axios.post("http://localhost:5000/atividades", form, {
         headers: {
@@ -80,6 +80,40 @@ export default function CreateActivity() {
     } catch (err) {
       console.error("Erro ao criar atividade:", err.response?.data || err.message);
       alert("Erro ao criar atividade.");
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  const gerarComIA = async () => {
+    if (!temaIA.trim()) {
+      alert("Informe um tema para gerar com IA.");
+      return;
+    }
+
+    try {
+      setCarregando(true);
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Token não encontrado. Faça login novamente.");
+
+      const res = await axios.post(
+        "http://localhost:5000/atividades/gerar",
+        { tema: temaIA },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const textoGerado = res.data.sugestao;
+      if (!textoGerado) throw new Error("Resposta da IA vazia.");
+
+      atualizarCampo("descricao", textoGerado);
+      alert("Atividade gerada com IA! Você pode ajustar e salvar.");
+    } catch (err) {
+      console.error("Erro ao gerar com IA:", err.response?.data || err.message);
+      alert("Erro ao gerar atividade com IA. Verifique seu login ou o servidor.");
     } finally {
       setCarregando(false);
     }
@@ -128,6 +162,17 @@ export default function CreateActivity() {
           required
           style={styles.textarea}
         />
+
+        <input
+          type="text"
+          placeholder="Tema para gerar com IA"
+          value={temaIA}
+          onChange={(e) => setTemaIA(e.target.value)}
+          style={styles.input}
+        />
+        <button type="button" onClick={gerarComIA} style={styles.miniBotao}>
+          🤖 Gerar com IA
+        </button>
 
         <h4>Perguntas:</h4>
         {form.perguntas.map((p, i) => (

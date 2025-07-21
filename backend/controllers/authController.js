@@ -1,49 +1,68 @@
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+const User = require("../models/User");
 
+// Registro de usuário
 exports.register = async (req, res) => {
-  const { nome, email, senha } = req.body;
+  const { name, email, password } = req.body;
+
+  if (!name || !email || !password) {
+    return res.status(400).json({ mensagem: "Preencha todos os campos." });
+  }
 
   try {
-    const senhaCriptografada = await bcrypt.hash(senha, 10);
-    const novoUsuario = new User({ nome, email, senha: senhaCriptografada });
-    await novoUsuario.save();
-
-    const token = jwt.sign({ userId: novoUsuario._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
-    res.status(201).json({ token, usuario: novoUsuario });
-  } catch (err) {
-    if (err.code === 11000 && err.keyValue?.email) {
-      return res.status(400).json({ mensagem: 'Este e-mail já está em uso.' });
+    const existe = await User.findOne({ email });
+    if (existe) {
+      return res.status(409).json({ mensagem: "Usuário já existe." });
     }
-    res.status(500).json({ mensagem: 'Erro ao registrar usuário', erro: err.message });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const novo = new User({ name, email, password: hashedPassword });
+    await novo.save();
+
+    console.log("✅ Novo usuário registrado:", email);
+    return res.status(201).json({ mensagem: "Usuário registrado com sucesso!" });
+  } catch (err) {
+    console.error("❌ Erro ao registrar:", err);
+    return res.status(500).json({ mensagem: "Erro interno no registro." });
   }
 };
 
+// Login de usuário
 exports.login = async (req, res) => {
-  const { email, senha } = req.body;
+  const { email, password } = req.body;
 
-  if (!email || !senha) {
-    return res.status(400).json({ mensagem: 'Email e senha são obrigatórios' });
-  }
+  console.log("📩 Tentativa de login:", email);
 
   try {
-    const usuario = await User.findOne({ email });
+    const user = await User.findOne({ email });
 
-    if (!usuario || !usuario.senha) {
-      return res.status(400).json({ mensagem: 'Usuário não encontrado ou senha não cadastrada' });
+    if (!user) {
+      console.log("❌ Usuário não encontrado:", email);
+      return res.status(401).json({ mensagem: "Credenciais inválidas." });
     }
 
-    const senhaCorreta = await bcrypt.compare(senha, usuario.senha);
-
+    const senhaCorreta = await bcrypt.compare(password, user.password);
     if (!senhaCorreta) {
-      return res.status(401).json({ mensagem: 'Senha incorreta' });
+      console.log("❌ Senha incorreta para:", email);
+      return res.status(401).json({ mensagem: "Credenciais inválidas." });
     }
 
-    const token = jwt.sign({ userId: usuario._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    console.log("🔐 JWT_SECRET em uso:", process.env.JWT_SECRET);
+    const token = jwt.sign(
+      { id: user._id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
 
-    res.status(200).json({ token, usuario });
+    console.log("✅ Login bem-sucedido. Token gerado:", token);
+
+    return res.status(200).json({
+      mensagem: "Login realizado com sucesso!",
+      token,
+    });
   } catch (err) {
-    res.status(500).json({ mensagem: 'Erro no login', erro: err.message });
+    console.error("❌ Erro no login:", err);
+    return res.status(500).json({ mensagem: "Erro ao fazer login." });
   }
 };

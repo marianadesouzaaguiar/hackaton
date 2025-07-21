@@ -48,6 +48,9 @@ export default function LoginPage() {
         style={styles.input}
       />
       <button onClick={login} style={styles.button}>Entrar</button>
+      <p>
+        Não tem uma conta? <a href="/signup">Registrar</a>
+      </p>
     </div>
   );
 }

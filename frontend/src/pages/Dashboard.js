@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
-import "jspdf-autotable"; // ✅ correto
+import "jspdf-autotable";
+import { logout } from "../utils/logout";
 
 export default function AtividadeLista() {
   const [atividades, setAtividades] = useState([]);
@@ -14,6 +15,7 @@ export default function AtividadeLista() {
   const [ordemAsc, setOrdemAsc] = useState(true);
 
   const atividadesPorPagina = 5;
+  const navigate = useNavigate();
 
   const buscarAtividades = async () => {
     setCarregando(true);
@@ -21,14 +23,17 @@ export default function AtividadeLista() {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get("http://localhost:5000/atividades", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
-            setAtividades(res.data);
+      setAtividades(res.data);
     } catch (err) {
-      setErro("Erro ao buscar atividades.");
-      console.error(err);
+      console.error("Erro ao buscar atividades:", err);
+      if (err.response && err.response.status === 401) {
+        alert("Sua sessão expirou. Faça login novamente.");
+        logout(navigate);
+      } else {
+        setErro("Erro ao buscar atividades.");
+      }
     } finally {
       setCarregando(false);
     }
@@ -83,9 +88,7 @@ export default function AtividadeLista() {
 
   const exportarPDF = () => {
     const doc = new jsPDF();
-  
     doc.text("Relatório de Atividades", 14, 10);
-  
     doc.autoTable({
       head: [["Título", "Matéria", "Descrição"]],
       body: atividadesFiltradas.map((a) => [
@@ -96,10 +99,10 @@ export default function AtividadeLista() {
       startY: 20,
       styles: {
         fontSize: 10,
-        cellWidth: 'wrap',
+        cellWidth: "wrap",
       },
       headStyles: {
-        fillColor: [0, 119, 204], // azul para cabeçalho
+        fillColor: [0, 119, 204],
         textColor: 255,
         halign: "center",
       },
@@ -107,24 +110,26 @@ export default function AtividadeLista() {
         valign: "top",
       },
     });
-  
     doc.save("atividades.pdf");
   };
-  
+
   const excluirAtividade = async (id) => {
     if (!window.confirm("Tem certeza que deseja excluir esta atividade?")) return;
     try {
       const token = localStorage.getItem("token");
       await axios.delete(`http://localhost:5000/atividades/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
-            alert("Atividade excluída com sucesso!");
+      alert("Atividade excluída com sucesso!");
       buscarAtividades();
     } catch (err) {
-      alert("Erro ao excluir atividade.");
-      console.error(err);
+      if (err.response && err.response.status === 401) {
+        alert("Sessão expirada. Faça login novamente.");
+        logout(navigate);
+      } else {
+        alert("Erro ao excluir atividade.");
+        console.error(err);
+      }
     }
   };
 
@@ -163,10 +168,7 @@ export default function AtividadeLista() {
         <button onClick={exportarCSV} style={styles.botao}>
           Exportar CSV
         </button>
-        <button
-          onClick={() => exportarPDF(atividadesPaginadas)}
-          style={styles.botao}
-        >
+        <button onClick={exportarPDF} style={styles.botao}>
           Exportar PDF
         </button>
       </div>
