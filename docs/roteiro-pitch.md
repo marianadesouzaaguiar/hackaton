@@ -25,7 +25,7 @@ Compartilhar conteúdo com alunos por meio de links.
 
 Tecnologia Utilizada:
 
-"Utilizamos Node.js com MongoDB no backend, React no frontend, e integramos a API da HuggingFace para gerar conteúdo educacional automaticamente."
+"Utilizamos Node.js com MongoDB no backend, React no frontend, e integramos a API da OpenRoutes para gerar conteúdo educacional automaticamente."
 
 Diferenciais:
 
@@ -43,7 +43,7 @@ Casos de Uso Reais:
 🔮 4. Próximos Passos (2 minutos)
 Melhorias Futuras:
 
-Implementar exportação em PDF.
+Implementar exportação em PDF para atividades criadas com IA.
 
 Criar funcionalidades para alunos responderem atividades online.
 
