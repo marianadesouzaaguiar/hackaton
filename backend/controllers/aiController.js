@@ -8,7 +8,7 @@ exports.generateActivity = async (req, res) => {
       return res.status(400).json({ error: "Tema é obrigatório e deve ser um texto válido." });
     }
 
-    const prompt = `Crie uma atividade com perguntas para alunos do ensino fundamental sobre: "${tema}". A atividade deve ser clara, objetiva e conter perguntas de múltipla escolha e abertas.`;
+    const prompt = `Crie uma atividade com perguntas sobre: "${tema}". A atividade deve ser clara, objetiva e conter perguntas de múltipla escolha e abertas.`;
 
     const sugestao = await generateTextWithOpenRouter(prompt);
 

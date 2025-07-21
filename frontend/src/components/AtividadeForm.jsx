@@ -165,7 +165,7 @@ export default function CreateActivity() {
 
         <input
           type="text"
-          placeholder="Tema para gerar com IA"
+          placeholder="Tema para gerar com IA com materia e nivel escolar"
           value={temaIA}
           onChange={(e) => setTemaIA(e.target.value)}
           style={styles.input}
