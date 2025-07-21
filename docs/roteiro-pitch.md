@@ -43,6 +43,8 @@ Casos de Uso Reais:
 🔮 4. Próximos Passos (2 minutos)
 Melhorias Futuras:
 
+Melhorias no prompt, tornando-o mais preciso e que possa preencher automaticamente todos os campos
+
 Criar funcionalidades para alunos responderem atividades online.
 
 Criar painel de desempenho do aluno.
